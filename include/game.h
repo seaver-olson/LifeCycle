@@ -24,8 +24,8 @@ typedef struct {
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
 
-#define ZOOM_MIN 0.25f
-#define ZOOM_MAX 4.0f
+#define ZOOM_MIN 1.0f
+#define ZOOM_MAX 3.5f
 
 #define WINDOW_TITLE "LifeCycle Simulator"
 #define BASE_TILE_SIZE 20
