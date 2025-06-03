@@ -1,5 +1,7 @@
 #include <SDL2/SDL.h>
 #include <stdbool.h>
+#define STB_PERLIN_IMPLEMENTATION
+#include "../include/stb_perlin.h"
 #include "../include/game.h"
 
 Camera camera = {0.0f, 0.0f, 1.0f};
@@ -14,11 +16,29 @@ float *createFastNoiseMap(int width, int height) {
         fprintf(stderr, "Memory allocation failed!\n");
         exit(EXIT_FAILURE);
     }
+    float scale = 0.05f;  // controls frequency of terrain
+    float center_x = width / 2.0f;
+    float center_y = height / 2.0f;
 
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
-            float value = (float)rand() / RAND_MAX * 2.0f - 1.0f;  // [-1.0, 1.0]
-            map[y * width + x] = value;
+
+            // 1. Generate Perlin noise
+            float nx = x * scale;
+            float ny = y * scale;
+            float noise = stb_perlin_noise3(nx, ny, 0.0f, 0, 0, 0);
+
+            // 2. Apply radial falloff
+            float dx = (x - center_x) / center_x;
+            float dy = (y - center_y) / center_y;
+            float dist = sqrtf(dx * dx + dy * dy);
+            float falloff = 1.0f - dist;
+            falloff = fmaxf(0.0f, falloff); // clamp to [0, 1]
+
+            // 3. Combine and bias the final value
+            float final = noise * falloff;
+
+            map[y * width + x] = final;
         }
     }
     return map;
@@ -102,7 +122,9 @@ void render_grid(SDL_Renderer *renderer){
 
 void place_tile(int x, int y, TileType type) {
     if (x < 0 || x >= GRID_COLS || y < 0 || y >= GRID_ROWS) return;
-    tileMap[y][x].type = type;
+    Tile tile = tileMap[y][x];
+    tile.type = type;
+    tileMap[y][x] = tile;
 }
 
 void generate_tile_map() {
@@ -111,13 +133,13 @@ void generate_tile_map() {
         for (int x = 0; x < GRID_COLS; x++) {
             float noise_value = noiseMap[y * (WINDOW_WIDTH / tile_size) + x];
             if (noise_value < -0.5f) {
-                tileMap[y][x].type = TILE_WATER;
+                place_tile(x, y, TILE_FOREST);
             } else if (noise_value < 0.0f) {
-                tileMap[y][x].type = TILE_GRASS;
+                place_tile(x, y, TILE_GRASS);
             } else if (noise_value < 0.5f) {
-                tileMap[y][x].type = TILE_FOREST;
+                place_tile(x, y, TILE_WATER);
             } else {
-                tileMap[y][x].type = TILE_MOUNTAIN;
+                place_tile(x, y, TILE_MOUNTAIN);
             }
         }
     }
@@ -178,8 +200,6 @@ int main(void) {
     tileMap[10][10].type = TILE_GRASS;
     tileMap[11][11].type = TILE_WATER;
     tileMap[12][12].type = TILE_FOREST;
-    noiseMap = createFastNoiseMap(WINDOW_WIDTH / tile_size, WINDOW_HEIGHT / tile_size);
-    freeFastNoiseMap(noiseMap); 
     if (!init(&window, &renderer)) {
         return 1;
     }
