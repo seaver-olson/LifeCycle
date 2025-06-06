@@ -6,6 +6,7 @@
 Camera camera = {0.0f, 0.0f, 1.0f};
 float *noiseMap = NULL;
 int tile_size = BASE_TILE_SIZE;
+TileType selectedType = TILE_EMPTY;
 Tile tileMap[GRID_ROWS][GRID_COLS];
 
 //noiseMap generator
@@ -86,6 +87,7 @@ void render_grid(SDL_Renderer *renderer){
             rect.y = (y * BASE_TILE_SIZE - camera.y) * camera.zoom;
             rect.w = tile_size;
             rect.h = tile_size;
+            //holy air ball - fix when not sleep deprived
             switch (tile.type){
                 case TILE_EMPTY:
                     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); 
@@ -121,16 +123,14 @@ void render_grid(SDL_Renderer *renderer){
 
 void place_tile(int x, int y, TileType type) {
     if (x < 0 || x >= GRID_COLS || y < 0 || y >= GRID_ROWS) return;
-    Tile tile = tileMap[y][x];
-    tile.type = type;
-    tileMap[y][x] = tile;
+    tileMap[y][x].type = type;
 }
 
 void generate_tile_map() {
-    noiseMap = createFastNoiseMap(WINDOW_WIDTH / tile_size, WINDOW_HEIGHT / tile_size);
-    for (int y = 0; y < (WINDOW_HEIGHT / tile_size); y++) {
-        for (int x = 0; x < (WINDOW_WIDTH / tile_size); x++) {
-            float noise_value = noiseMap[y * (WINDOW_WIDTH / tile_size) + x];
+    noiseMap = createFastNoiseMap(GRID_COLS, GRID_ROWS);
+    for (int y = 0; y < GRID_ROWS; y++) {
+        for (int x = 0; x < GRID_COLS; x++) {
+            float noise_value = noiseMap[y * GRID_COLS + x];
             if (noise_value < -0.5f) {
                 place_tile(x, y, TILE_FOREST);
             } else if (noise_value < 0.0f) {
@@ -148,14 +148,14 @@ void game_loop(SDL_Renderer *renderer) {
     bool running = true;
     SDL_Event event;
     generate_tile_map();
+    //center the screen before gameloop
+    camera.x = GRID_COLS * BASE_TILE_SIZE / 2 - WINDOW_WIDTH / 2;
+    camera.y = GRID_ROWS * BASE_TILE_SIZE / 2 - WINDOW_HEIGHT / 2;
     while (running) {
         tile_size = BASE_TILE_SIZE * camera.zoom;
         while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT) {
-                running = false;
-            }
-        
-            if (event.type == SDL_MOUSEWHEEL){
+            if (event.type == SDL_QUIT) running = false;
+            else if (event.type == SDL_MOUSEWHEEL){
                 int mx, my;
                 SDL_GetMouseState(&mx, &my);
 
@@ -170,19 +170,31 @@ void game_loop(SDL_Renderer *renderer) {
 
                 camera.x += (beforeZoomX - afterZoomX);
                 camera.y += (beforeZoomY - afterZoomY);
-
+                printf("Zoom: %.2f, Tile Size: %d\n", camera.zoom, tile_size);
+            } else if (event.type == SDL_MOUSEBUTTONDOWN) {
+                int mx, my;
+                SDL_GetMouseState(&mx, &my);
+                mx = (camera.x + mx / camera.zoom) / BASE_TILE_SIZE;
+                my = (camera.y + my / camera.zoom) / BASE_TILE_SIZE;
+                place_tile(mx, my, selectedType);
+            } else if (event.type == SDL_KEYDOWN){
+                switch (event.key.keysym.sym) {
+                    case SDLK_1: selectedType = TILE_GRASS; break;
+                    case SDLK_2: selectedType = TILE_WATER; break;
+                    case SDLK_3: selectedType = TILE_FOREST; break;
+                    case SDLK_4: selectedType = TILE_MOUNTAIN; break;
+                    case SDLK_5: selectedType = TILE_ROAD; break;
+                    case SDLK_6: selectedType = TILE_BUILDING; break;
+                    case SDLK_0: selectedType = TILE_EMPTY; break;
+                }
             }
         }
-        printf("Zoom: %.2f, Tile Size: %d\n", camera.zoom, tile_size);
-        // Render
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
         render_grid(renderer);
 
-
         SDL_RenderPresent(renderer);
 
-        
         SDL_Delay(16);//approx 62 FPS
     }
 }
@@ -194,18 +206,16 @@ void cleanup(SDL_Window *window, SDL_Renderer *renderer) {
 }
 
 int main(void) {
-    srand(time(0));
+    srand(time(NULL));
     SDL_Window *window = NULL;
     SDL_Renderer *renderer = NULL;
-    tileMap[10][10].type = TILE_GRASS;
-    tileMap[11][11].type = TILE_WATER;
-    tileMap[12][12].type = TILE_FOREST;
     if (!init(&window, &renderer)) {
         return 1;
     }
-    game_loop(renderer);
-    cleanup(window, renderer);
 
+    game_loop(renderer);
+
+    cleanup(window, renderer);
     return 0;
 }
 

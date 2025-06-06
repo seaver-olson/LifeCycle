@@ -1,5 +1,8 @@
 {
     "files.associations": {
-        "sdl.h": "c"
+        "sdl.h": "c",
+        "queue": "c",
+        "stack": "c",
+        "random": "c"
     }
 }
