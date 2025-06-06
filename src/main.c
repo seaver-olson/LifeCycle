@@ -1,5 +1,4 @@
 #include <SDL2/SDL.h>
-#include <stdbool.h>
 #define STB_PERLIN_IMPLEMENTATION
 #include "../include/stb_perlin.h"
 #include "../include/game.h"
@@ -26,7 +25,7 @@ float *createFastNoiseMap(int width, int height) {
             // 1. Generate Perlin noise
             float nx = x * scale;
             float ny = y * scale;
-            float noise = stb_perlin_noise3(nx, ny, 0.0f, 0, 0, 0);
+            float noise = stb_perlin_noise3_seed(nx, ny, 0.0f, 0, 0, 0, rand() % (1001));
 
             // 2. Apply radial falloff
             float dx = (x - center_x) / center_x;
@@ -129,8 +128,8 @@ void place_tile(int x, int y, TileType type) {
 
 void generate_tile_map() {
     noiseMap = createFastNoiseMap(WINDOW_WIDTH / tile_size, WINDOW_HEIGHT / tile_size);
-    for (int y = 0; y < GRID_ROWS; y++) {
-        for (int x = 0; x < GRID_COLS; x++) {
+    for (int y = 0; y < (WINDOW_HEIGHT / tile_size); y++) {
+        for (int x = 0; x < (WINDOW_WIDTH / tile_size); x++) {
             float noise_value = noiseMap[y * (WINDOW_WIDTH / tile_size) + x];
             if (noise_value < -0.5f) {
                 place_tile(x, y, TILE_FOREST);
@@ -184,7 +183,7 @@ void game_loop(SDL_Renderer *renderer) {
         SDL_RenderPresent(renderer);
 
         
-        SDL_Delay(16);//60 FPS
+        SDL_Delay(16);//approx 62 FPS
     }
 }
 
@@ -195,6 +194,7 @@ void cleanup(SDL_Window *window, SDL_Renderer *renderer) {
 }
 
 int main(void) {
+    srand(time(0));
     SDL_Window *window = NULL;
     SDL_Renderer *renderer = NULL;
     tileMap[10][10].type = TILE_GRASS;
