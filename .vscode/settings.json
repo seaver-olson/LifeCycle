@@ -3,6 +3,8 @@
         "sdl.h": "c",
         "queue": "c",
         "stack": "c",
-        "random": "c"
-    }
+        "random": "c",
+        "stb_perlin.h": "c"
+    },
+    "C_Cpp.errorSquiggles": "disabled"
 }

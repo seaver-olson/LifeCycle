@@ -1,7 +1,11 @@
+#ifndef GAME_H
+#define GAME_H
+
 #include <SDL2/SDL.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <math.h>
 
 typedef enum{
     TILE_EMPTY,
@@ -48,5 +52,5 @@ void cleanup(SDL_Window *window, SDL_Renderer *renderer);
 void render_grid(SDL_Renderer *renderer);
 void place_tile(int x, int y, TileType type);
 
-float *createFastNoiseMap(int width, int height);
-void freeFastNoiseMap(float *map);
+
+#endif
