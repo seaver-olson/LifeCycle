@@ -1,4 +1,3 @@
-#include "mapGenerator.h"
 #include "game.h"
 
 #define STB_PERLIN_IMPLEMENTATION
