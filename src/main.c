@@ -8,6 +8,8 @@ float *noiseMap = NULL;
 int tile_size = BASE_TILE_SIZE;
 TileType selectedType = TILE_EMPTY;
 Tile tileMap[GRID_ROWS][GRID_COLS];
+bool mouseDown = false;
+char* targetOut = "out.map";//for later saving of maps
 
 //noiseMap generator
 float *createFastNoiseMap(int width, int height) {
@@ -77,7 +79,7 @@ void render_grid(SDL_Renderer *renderer){
     int start_x = (int)(camera.x / BASE_TILE_SIZE);
     int start_y = (int)(camera.y / BASE_TILE_SIZE);
     int end_x = (int)((camera.x + WINDOW_WIDTH / camera.zoom) / BASE_TILE_SIZE) + 1;
-    int end_y = (int)((camera.y + WINDOW_HEIGHT / camera.zoom) / BASE_TILE_SIZE) + 1;
+    int end_y = (int)((camera.y + GAME_HEIGHT / camera.zoom) / BASE_TILE_SIZE) + 1;
 
     for (int y = start_y; y < end_y; y++){
         for (int x = start_x; x < end_x; x++){
@@ -144,13 +146,36 @@ void generate_tile_map() {
     }
 }
 
+void paintTile(){
+    static int last_x = -1, last_y = -1;
+
+    int mx, my;
+    SDL_GetMouseState(&mx, &my);
+    if (my > GAME_HEIGHT) return; //don't paint on UI
+    int grid_x = (camera.x + mx / camera.zoom) / BASE_TILE_SIZE;
+    int grid_y = (camera.y + my / camera.zoom) / BASE_TILE_SIZE;
+
+    if (grid_x != last_x || grid_y != last_y ) {
+        place_tile(grid_x, grid_y, selectedType);
+        last_x = grid_x;
+        last_y = grid_y;
+    }
+}
+
+void render_UI(SDL_Renderer *renderer) {
+    SDL_Rect panel = {0, GAME_HEIGHT, WINDOW_WIDTH, WINDOW_HEIGHT};
+    SDL_SetRenderDrawColor(renderer, 50, 50, 50, 136); // dark semi-transparent
+    SDL_RenderFillRect(renderer, &panel);
+}
+
+
 void game_loop(SDL_Renderer *renderer) {
     bool running = true;
     SDL_Event event;
     generate_tile_map();
     //center the screen before gameloop
     camera.x = GRID_COLS * BASE_TILE_SIZE / 2 - WINDOW_WIDTH / 2;
-    camera.y = GRID_ROWS * BASE_TILE_SIZE / 2 - WINDOW_HEIGHT / 2;
+    camera.y = GRID_ROWS * BASE_TILE_SIZE / 2 - GAME_HEIGHT / 2;
     while (running) {
         tile_size = BASE_TILE_SIZE * camera.zoom;
         while (SDL_PollEvent(&event)) {
@@ -158,7 +183,7 @@ void game_loop(SDL_Renderer *renderer) {
             else if (event.type == SDL_MOUSEWHEEL){
                 int mx, my;
                 SDL_GetMouseState(&mx, &my);
-
+                
                 float beforeZoomX = camera.x + mx / camera.zoom;
                 float beforeZoomY = camera.y + my / camera.zoom;
 
@@ -172,11 +197,9 @@ void game_loop(SDL_Renderer *renderer) {
                 camera.y += (beforeZoomY - afterZoomY);
                 printf("Zoom: %.2f, Tile Size: %d\n", camera.zoom, tile_size);
             } else if (event.type == SDL_MOUSEBUTTONDOWN) {
-                int mx, my;
-                SDL_GetMouseState(&mx, &my);
-                mx = (camera.x + mx / camera.zoom) / BASE_TILE_SIZE;
-                my = (camera.y + my / camera.zoom) / BASE_TILE_SIZE;
-                place_tile(mx, my, selectedType);
+                mouseDown = true;
+            } else if (event.type == SDL_MOUSEBUTTONUP) {
+                mouseDown = false;
             } else if (event.type == SDL_KEYDOWN){
                 switch (event.key.keysym.sym) {
                     case SDLK_1: selectedType = TILE_GRASS; break;
@@ -191,8 +214,12 @@ void game_loop(SDL_Renderer *renderer) {
         }
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
-        render_grid(renderer);
+        if (mouseDown){
+            paintTile();
+        }
 
+        render_grid(renderer);
+        render_UI(renderer);
         SDL_RenderPresent(renderer);
 
         SDL_Delay(16);//approx 62 FPS

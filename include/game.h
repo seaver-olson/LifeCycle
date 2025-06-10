@@ -23,8 +23,10 @@ typedef struct {
     float zoom;      // e.g., 1.0 = 100%, 2.0 = zoomed in
 } Camera;
 
-#define WINDOW_WIDTH 800
-#define WINDOW_HEIGHT 600
+#define WINDOW_WIDTH 1600
+#define WINDOW_HEIGHT 1000
+
+#define GAME_HEIGHT 800
 
 #define ZOOM_MIN 1.0f
 #define ZOOM_MAX 3.5f
