@@ -21,7 +21,6 @@ int main(int argc, char *argv[]) {
             generate_tile_map();
         } else if (strcmp(argv[1], "2") == 0) {
             printf("Error: to load map please follow first arg with map file\n");
-            loadMap(argv[2], &tileMap[0][0]);
             return 1;
         } else {
             printf("Error: unrecognized arg\n");
@@ -29,6 +28,7 @@ int main(int argc, char *argv[]) {
         }
     } else if (argc == 3 && strcmp(argv[1], "2") == 0){
         printf("Attempting to load map from %s\n", argv[2]);
+        loadMap(argv[2], &tileMap[0][0]);
     } else {
         printf("invalid usage of arguments");
         return 1;        
