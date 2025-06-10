@@ -1,5 +1,6 @@
 #include "mapGenerator.h"
 #include "game.h"
+#include "mapFile.h"
 
 Camera camera = {0.0f, 0.0f, 1.0f};
 float *noiseMap = NULL;
@@ -128,10 +129,9 @@ void render_UI(SDL_Renderer *renderer) {
 }
 
 
-void game_loop(SDL_Renderer *renderer) {
+void game_loop(SDL_Renderer *renderer, int saveFlag) {
     bool running = true;
     SDL_Event event;
-    generate_tile_map();
     //center the screen before gameloop
     camera.x = GRID_COLS * BASE_TILE_SIZE / 2 - WINDOW_WIDTH / 2;
     camera.y = GRID_ROWS * BASE_TILE_SIZE / 2 - GAME_HEIGHT / 2;
@@ -183,6 +183,7 @@ void game_loop(SDL_Renderer *renderer) {
 
         SDL_Delay(16);//approx 62 FPS
     }
+    if (saveFlag == 1) saveMap(&tileMap[0][0]);
 }
 
 void cleanup(SDL_Window *window, SDL_Renderer *renderer) {

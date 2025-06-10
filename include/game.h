@@ -47,10 +47,10 @@ extern int tile_size;
 extern float *noiseMap;
 
 bool init(SDL_Window **window, SDL_Renderer **renderer);
-void game_loop(SDL_Renderer *renderer);
+void game_loop(SDL_Renderer *renderer, int saveFlag);
 void cleanup(SDL_Window *window, SDL_Renderer *renderer);
 void render_grid(SDL_Renderer *renderer);
 void place_tile(int x, int y, TileType type);
-
+void generate_tile_map();
 
 #endif

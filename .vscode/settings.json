@@ -4,7 +4,8 @@
         "queue": "c",
         "stack": "c",
         "random": "c",
-        "stb_perlin.h": "c"
+        "stb_perlin.h": "c",
+        "mapfile.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }
