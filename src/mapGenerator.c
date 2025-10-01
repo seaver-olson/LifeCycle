@@ -7,7 +7,7 @@
 float *createFastNoiseMap(int width, int height) {
     float *map = malloc(width * height * sizeof(float));
     if (!map) {
-        fprintf(stderr, "Memory allocation failed!\n");
+        fprintf(stderr, "Memory allocation failed!\n");//showing student how to push git file
         exit(EXIT_FAILURE);
     }
     float scale = 0.05f;  // controls frequency of terrain
